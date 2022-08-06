@@ -26,6 +26,7 @@ namespace BarclaysToDos.Services.ToDoItemServices
 
             todoItem.Id = _context.TodoItems.Keys.Max() + 1;
             var item = _mapper.Map<ToDoItem>(todoItem);
+            item.CreationTime = DateTime.Now;
             var result = _context.TodoItems.TryAdd(item.Id, item);
             if (result)
                 return Result<ToDoItemDto>.Success(todoItem);
@@ -75,6 +76,11 @@ namespace BarclaysToDos.Services.ToDoItemServices
 
             if (item != null)
             {
+                if (item.Status != Domain.Constant.Status.Completed && todoItem.Status == Domain.Constant.Status.Completed)
+                {
+                    item.CompletionTime = DateTime.Now;
+                }
+
                 _context.TodoItems[item.Id] = _mapper.Map<ToDoItem>(todoItem);
                 return Result<bool>.Success(true);
             }
