@@ -1,70 +1,78 @@
-﻿using BarclaysToDos.Domain.Constant;
+﻿using AutoMapper;
+using BarclaysToDos.Data;
+using BarclaysToDos.Domain;
+using BarclaysToDos.Domain.Constant;
+using BarclaysToDos.Services.Core;
 using BarclaysToDos.Services.ToDoItemServices;
 using BarclaysToDos.Services.ToDoItemServices.Dto;
+using BarclaysToDos.Services.ToDoItemServices.Mapper;
+using BarclaysToDos.Services.ToDoItemServices.Validation;
 using BarclaysToDos.WebApi.Controllers;
-using Microsoft.AspNetCore.Mvc;
 using Moq;
-using Xunit;
 
 namespace BarclaysToDos.Test.Controllers
 {
     public class TodoControllerTest
     {
-        [Fact]
-        public async Task Index_Returns_ListOf_Todo()
+        private readonly IToDoItemRepository _toDoItemRepository;
+        private NameValidator _validator { get; }
+        private readonly IMapper _mapper;
+        public TodoControllerTest()
         {
-            // Arrange
-            var mockRepo = new Mock<IToDoItemRepository>();
+            var mockMapper = new MapperConfiguration(cfg => { cfg.AddProfile(new ToDoItemProfile()); });
+            _mapper = mockMapper.CreateMapper();
 
-            mockRepo.Setup(repo => repo.GetTodoListItems())
-                .Returns(GetTestTodos());
+            ToDoContext context = new ToDoContext();
+            context.TodoItems = GetTestTodos().ToDictionary(x => x.Id, x => x);
 
-            var controller = new ToDoController(mockRepo.Object);
+            _toDoItemRepository = new ToDoItemRepository(context, _mapper);
 
-            // Act
-            var result = await controller.Index();
-
-            // Assert
-            Assert.Equal(2, result.Value.Count());
-            Assert.Equal("Test One", result.Value.FirstOrDefault().Name);
+            _validator = new NameValidator(_toDoItemRepository);
         }
 
         [Fact]
-        public async Task Create_ReturnsBadRequest_GivenNullModel()
+        public async Task Index_Returns_ListOf_Todo()
         {
-            // Arrange & Act
-            var mockRepo = new Mock<IToDoItemRepository>();
-            var controller = new ToDoController(mockRepo.Object);
-            controller.ModelState.AddModelError("error", "some error");
+            var result = await _toDoItemRepository.GetTodoListItems();
+            Assert.Equal(2, result.Value.Count);
+            Assert.Equal("Test One", result.Value[0].Name);
+        }
 
-            // Act
-            var result = await controller.AddTodo(null);
-
-            // Assert
-            Assert.IsType<BadRequestResult>(result);
+        [Fact]
+        public async Task Create_ReturnsIsSuccessFalse_GivenNullModel()
+        {
+            var result = await _toDoItemRepository.AddAsync(null);
+            Assert.False(result.IsSuccess);
         }
 
         [Fact]
         public async Task Create_ReturnsCreatedTodo_GivenCorrectInputs()
         {
-            // Arrange
             const string testName = "Test Name";
+            
             var newTodo = new ToDoItemDto
             {
                 Name = testName,
                 Priority = (int)Priority.Low,
                 Status = Status.InProgress
             };
-            var mockRepo = new Mock<IToDoItemRepository>();
-            var controller = new ToDoController(mockRepo.Object);
 
-            // Act
-            var result = await controller.AddTodo(newTodo);
+            var returnTodo = await _toDoItemRepository.AddAsync(newTodo);
 
-            // Assert
-            var okResult = Assert.IsType<CreatedAtRouteResult>(result);
-            var returnTodo = Assert.IsType<ToDoItemDto>(okResult.Value);
-            Assert.Equal(testName, returnTodo.Name);
+            Assert.Equal(testName, returnTodo.Value.Name);
+        }
+
+        [Fact]
+        public void Validator_NotAllowSameNamedTask()
+        {
+            var newTodo = new ToDoItemDto
+            {
+                Name = "Test One",
+                Priority = (int)Priority.Low,
+                Status = Status.InProgress
+            };
+
+            Assert.False(_validator.Validate(newTodo).IsValid);
         }
 
         [Fact]
@@ -74,34 +82,35 @@ namespace BarclaysToDos.Test.Controllers
             const string testName = "Test Name";
             var newTodo = new ToDoItemDto
             {
+                Id = 1,
                 Name = testName,
                 Priority = (int)Priority.Low,
                 Status = Status.InProgress
             };
-            var mockRepo = new Mock<IToDoItemRepository>();
-            var controller = new ToDoController(mockRepo.Object);
 
-            // Act
-            var result = await controller.AddTodo(newTodo);
-
-            // Assert
-            var okResult = Assert.IsType<CreatedAtRouteResult>(result);
-            var returnTodo = Assert.IsType<ToDoItemDto>(okResult.Value);
-            Assert.Equal(testName, returnTodo.Name);
+            var returnTodo = await _toDoItemRepository.UpdateAsync(newTodo);
+            Assert.True(returnTodo.IsSuccess);
         }
 
-        private static async Task<List<ToDoItemDto>> GetTestTodos()
+        [Fact]
+        public async Task Update_ReturnsIsSuccessFalse_GivenNullModel()
         {
-            return new List<ToDoItemDto>
+            var returnTodo = await _toDoItemRepository.UpdateAsync(null);
+            Assert.False(returnTodo.IsSuccess);
+        }
+
+        private static List<ToDoItem> GetTestTodos()
+        {
+            return new List<ToDoItem>
             {
-                new ToDoItemDto
+                new ToDoItem
                 {
                     Id = 1,
                     Name = "Test One",
                     Priority = (int)Priority.Low,
                     Status = Status.InProgress
                 },
-                new ToDoItemDto
+                new ToDoItem
                 {
                     Id = 2,
                     Name = "Test Two",

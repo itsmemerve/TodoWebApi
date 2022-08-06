@@ -1,13 +1,16 @@
-﻿using BarclaysToDos.Services.ToDoItemServices.Dto;
+﻿using BarclaysToDos.Services.Core;
+using BarclaysToDos.Services.ToDoItemServices.Dto;
 
 namespace BarclaysToDos.Services.ToDoItemServices
 {
     public interface IToDoItemRepository
     {
-        Task<List<ToDoItemDto>> GetTodoListItems();
+        Task<Result<PagedList<ToDoItemDto>>> GetTodoListItems();
+        List<ToDoItemDto> GetTodoList();
         Task<ToDoItemDto> FindToDoItemAsync(int id);
-        Task<ToDoItemDto> AddAsync(ToDoItemDto todoItem);
-        Task<ToDoItemDto> UpdateAsync(ToDoItemDto todoItem);
-        Task<bool> DeleteAsync(int todoItemId);
+        Task<Result<ToDoItemDto>> AddAsync(ToDoItemDto todoItem);
+        Task<Result<bool>> UpdateAsync(ToDoItemDto todoItem);
+        Task<Result<bool>> DeleteAsync(int todoItemId);
+        bool IsExistName(string name);
     }
 }

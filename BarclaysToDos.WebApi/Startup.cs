@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
 using BarclaysToDos.Data;
+using BarclaysToDos.Services.Core;
 using BarclaysToDos.Services.ToDoItemServices;
 using BarclaysToDos.Services.ToDoItemServices.Mapper;
+using BarclaysToDos.Services.ToDoItemServices.Validation;
+using FluentValidation.AspNetCore;
 
 namespace BarclaysToDos.WebApi
 {
@@ -20,8 +23,14 @@ namespace BarclaysToDos.WebApi
             services.AddControllers();
             services.AddSwaggerGen();
             services.AddAutoMapper(typeof(Startup));
+            services.AddMvc(options => { options.Filters.Add<ValidationFilter>(); })
+                    .AddFluentValidation(opt => 
+                    {
+                        opt.RegisterValidatorsFromAssemblyContaining<Startup>();
+                        opt.RegisterValidatorsFromAssemblyContaining<NameValidator>();
+                    });
 
-            var mapperconfig = new AutoMapper.MapperConfiguration(x =>
+            var mapperconfig = new MapperConfiguration(x =>
             {
                 x.AddProfile(new ToDoItemProfile());
             });
@@ -40,12 +49,7 @@ namespace BarclaysToDos.WebApi
                 app.UseSwaggerUI();
                 app.UseDeveloperExceptionPage();
             }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-                app.UseHsts();
-            }
-
+            
             app.UseCors(cors => cors.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod())
                .UseHttpsRedirection()
                .UseAuthorization()

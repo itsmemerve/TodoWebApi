@@ -4,9 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BarclaysToDos.WebApi.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ToDoController : Controller
+    public class ToDoController : BaseApiController
     {
         private readonly IToDoItemRepository _toDoItemRepository;
 
@@ -16,33 +14,31 @@ namespace BarclaysToDos.WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<ToDoItemDto>>> Index()
+        public async Task<IActionResult> GetTodoList()
         {
             var todoItems = await _toDoItemRepository.GetTodoListItems();
-            return todoItems;
+            return HandlePagedResult(todoItems);
         }
 
         [HttpPost]
-        public async Task<ActionResult> AddTodo(ToDoItemDto todoItem)
+        public async Task<IActionResult> AddTodo(ToDoItemDto todoItem)
         {
             if (todoItem == null)
             {
                 return BadRequest();
             }
 
-            var newItem = await _toDoItemRepository.AddAsync(todoItem);
-            return CreatedAtRoute("Index", new { id = todoItem.Id }, todoItem);
+            return HandleResult(await _toDoItemRepository.AddAsync(todoItem));
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTodo(int id)
         {
-            await _toDoItemRepository.DeleteAsync(id);
-            return NoContent();
+            return HandleResult(await _toDoItemRepository.DeleteAsync(id));
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<ToDoItemDto>> PutTodo(int id, ToDoItemDto todo)
+        public async Task<IActionResult> PutTodo(int id, ToDoItemDto todo)
         {
             if (todo == null)
                 return BadRequest();
@@ -51,7 +47,7 @@ namespace BarclaysToDos.WebApi.Controllers
                 return BadRequest();
 
             await _toDoItemRepository.UpdateAsync(todo);
-            return CreatedAtRoute("GetTodo", new { id = todo.Id }, todo);
+            return HandleResult(await _toDoItemRepository.UpdateAsync(todo));
         }
     }
 }
