@@ -13,6 +13,9 @@ namespace BarclaysToDos.WebApi.Controllers
             _toDoItemRepository = toDoItemRepository;
         }
 
+        /// <summary>
+        /// This method returns all to-do lists.
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetTodoList()
         {
@@ -20,6 +23,9 @@ namespace BarclaysToDos.WebApi.Controllers
             return HandlePagedResult(todoItems);
         }
 
+        /// <summary>
+        /// This method helps to add new todo item.
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> AddTodo(ToDoItemDto todoItem)
         {
@@ -31,12 +37,18 @@ namespace BarclaysToDos.WebApi.Controllers
             return HandleResult(await _toDoItemRepository.AddAsync(todoItem));
         }
 
+        /// <summary>
+        /// This method helps to delete todo item by id.
+        /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTodo(int id)
         {
             return HandleResult(await _toDoItemRepository.DeleteAsync(id));
         }
 
+        /// <summary>
+        /// This method updates todo item. Name, Status and Priority fields are required
+        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTodo(int id, ToDoItemDto todo)
         {
@@ -46,7 +58,6 @@ namespace BarclaysToDos.WebApi.Controllers
             if (id != todo.Id)
                 return BadRequest();
 
-            await _toDoItemRepository.UpdateAsync(todo);
             return HandleResult(await _toDoItemRepository.UpdateAsync(todo));
         }
     }

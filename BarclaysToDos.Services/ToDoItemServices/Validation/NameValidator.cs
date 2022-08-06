@@ -12,19 +12,17 @@ namespace BarclaysToDos.Services.ToDoItemServices.Validation
 
             RuleFor(x => x.Name)
                .NotEmpty()
-               .MinimumLength(2)
-               .Must(UniqueNameRule).WithMessage("Todo Item Name field must be unique");
+               .MinimumLength(2);
+            
+            RuleFor(x => x).Must(UniqueNameRule);
 
             RuleFor(x => x.Priority).NotNull();
             RuleFor(x => x.Status).NotNull();
         }
 
-        private bool UniqueNameRule(string name)
+        private bool UniqueNameRule(ToDoItemDto dto)
         {
-            var exist = _toDoItemRepository.IsExistName(name);
-            if (exist)
-                return false;
-            return true;
+            return _toDoItemRepository.IsExistName(dto);
         }
     }
 }

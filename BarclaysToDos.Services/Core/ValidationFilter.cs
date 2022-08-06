@@ -1,10 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using System.Net;
 
 namespace BarclaysToDos.Services.Core
 {
     public class ValidationFilter : IAsyncActionFilter
     {
+        /// <summary>
+        /// a coding has been made that will return an error if there is no ModelState.Isvalid. 
+        /// First of all, we caught the errors coming from ModelState. 
+        /// The errors we caught were returned with foreach and added on the instance we created for Error management.
+        /// </summary>
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             if (!context.ModelState.IsValid)
@@ -23,6 +29,7 @@ namespace BarclaysToDos.Services.Core
                     {
                         ErrorModel errorModel = new ErrorModel
                         {
+                            Status = (int)HttpStatusCode.BadRequest,
                             Field = error.Key,
                             Message = subError
                         };

@@ -33,7 +33,7 @@ namespace BarclaysToDos.Services.ToDoItemServices
                 return Result<ToDoItemDto>.Failure("Error has occured.");
         }
 
-        public async Task<Result<bool>> DeleteAsync(int todoItemId)
+        public async Task<Result<string>> DeleteAsync(int todoItemId)
         {
             var item = await FindToDoItemAsync(todoItemId);
             if (item != null)
@@ -42,15 +42,15 @@ namespace BarclaysToDos.Services.ToDoItemServices
                 {
                     var res = _context.TodoItems.Remove(item.Id);
                     if (res)
-                        return Result<bool>.Success(res);
+                        return Result<string>.Success("Successfully Deleted");
                     else
-                        return Result<bool>.Failure("Error has occured");
+                        return Result<string>.Failure("Error has occured");
                 }
                 else
-                    return Result<bool>.Failure("Only completed records can be deleted.");
+                    return Result<string>.Failure("Only completed items can be deleted.");
             }
             else
-                return Result<bool>.Failure("Item not found");
+                return Result<string>.Success("Item not found");
         }
 
         /// <summary>
@@ -96,9 +96,17 @@ namespace BarclaysToDos.Services.ToDoItemServices
             else return null;
         }
 
-        public bool IsExistName(string name)
+        public bool IsExistName(ToDoItemDto dto)
         {
-            return _context.TodoItems.Any(x => x.Value.Name == name);
+            ToDoItem? toDoItem;
+            _context.TodoItems.TryGetValue(dto.Id, out toDoItem);
+
+            if (toDoItem == null)
+            {
+                return true;
+            }
+
+            return toDoItem.Id == dto.Id;
         }
 
         public List<ToDoItemDto> GetTodoList()

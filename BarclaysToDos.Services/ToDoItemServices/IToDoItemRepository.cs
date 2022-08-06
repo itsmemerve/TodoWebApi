@@ -10,7 +10,7 @@ namespace BarclaysToDos.Services.ToDoItemServices
         Task<ToDoItemDto> FindToDoItemAsync(int id);
         Task<Result<ToDoItemDto>> AddAsync(ToDoItemDto todoItem);
         Task<Result<bool>> UpdateAsync(ToDoItemDto todoItem);
-        Task<Result<bool>> DeleteAsync(int todoItemId);
-        bool IsExistName(string name);
+        Task<Result<string>> DeleteAsync(int todoItemId);
+        bool IsExistName(ToDoItemDto dto);
     }
 }

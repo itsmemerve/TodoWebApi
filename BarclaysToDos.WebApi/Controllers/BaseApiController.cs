@@ -1,5 +1,6 @@
 ﻿using BarclaysToDos.Services.Core;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace BarclaysToDos.WebApi.Controllers
 {
@@ -14,7 +15,13 @@ namespace BarclaysToDos.WebApi.Controllers
                 return Ok(result.Value);
             if (result.IsSuccess && result.Value == null)
                 return NotFound();
-            return BadRequest(result.Error);
+
+            return new ContentResult()
+            {
+                Content = result.Error.ToString(),
+                ContentType = "Error",
+                StatusCode = (int)HttpStatusCode.BadRequest
+            };
         }
 
         protected ActionResult HandlePagedResult<T>(Result<PagedList<T>> result)

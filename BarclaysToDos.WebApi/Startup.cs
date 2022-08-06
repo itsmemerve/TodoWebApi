@@ -5,6 +5,7 @@ using BarclaysToDos.Services.ToDoItemServices;
 using BarclaysToDos.Services.ToDoItemServices.Mapper;
 using BarclaysToDos.Services.ToDoItemServices.Validation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BarclaysToDos.WebApi
 {
@@ -33,6 +34,11 @@ namespace BarclaysToDos.WebApi
             var mapperconfig = new MapperConfiguration(x =>
             {
                 x.AddProfile(new ToDoItemProfile());
+            });
+
+            services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.SuppressModelStateInvalidFilter = true;
             });
 
             IMapper mapper = mapperconfig.CreateMapper();
